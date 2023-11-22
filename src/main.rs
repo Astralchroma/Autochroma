@@ -1,12 +1,16 @@
+mod commands;
+
 use poise::{serenity_prelude::GatewayIntents, Framework, FrameworkOptions};
 use serde::Deserialize;
-use std::{convert::Infallible, fs::File, io, io::Read};
+use std::{fs::File, io, io::Read, time::SystemTime};
 use thiserror::Error;
 
-type Error = Box<dyn std::error::Error + Send + Sync>;
-type Context<'a> = poise::Context<'a, Data, Error>;
+pub type Error = Box<dyn std::error::Error + Send + Sync>;
+pub type Context<'a> = poise::Context<'a, Data, Error>;
 
-struct Data {}
+pub struct Data {
+	startup_time: SystemTime,
+}
 
 #[derive(Deserialize)]
 struct Config {
@@ -25,12 +29,18 @@ async fn main() -> Result<(), InitializationError> {
 
 	let framework = Framework::builder()
 		.options(FrameworkOptions {
-			commands: vec![],
+			commands: vec![commands::uptime()],
 			..Default::default()
 		})
 		.token(config.token)
 		.intents(GatewayIntents::empty())
-		.setup(|_context, _ready, _framework| Box::pin(async move { Ok::<Data, Infallible>(Data {}) }));
+		.setup(|_context, _ready, _framework| {
+			Box::pin(async move {
+				Ok(Data {
+					startup_time: SystemTime::now(),
+				})
+			})
+		});
 
 	Ok(framework.run().await?)
 }
