@@ -1,6 +1,6 @@
 mod commands;
 
-use poise::{serenity_prelude::GatewayIntents, Framework, FrameworkOptions};
+use poise::{builtins::register_globally, serenity_prelude::GatewayIntents, Framework, FrameworkOptions};
 use serde::Deserialize;
 use std::{fs::File, io, io::Read, result, time::SystemTime};
 use thiserror::Error;
@@ -35,8 +35,10 @@ async fn main() -> result::Result<(), InitializationError> {
 		})
 		.token(config.token)
 		.intents(GatewayIntents::empty())
-		.setup(|_context, _ready, _framework| {
+		.setup(|context, _ready, framework| {
 			Box::pin(async move {
+				register_globally(context, &framework.options().commands).await?;
+
 				Ok(Data {
 					startup_time: SystemTime::now(),
 				})
