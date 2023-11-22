@@ -1,9 +1,9 @@
-use crate::{Context, Error};
+use crate::{Context, Result};
 use poise::command;
 use std::time::SystemTime;
 
 #[command(slash_command)]
-pub async fn uptime(context: Context<'_>) -> Result<(), Error> {
+pub async fn uptime(context: Context<'_>) -> Result<()> {
 	let time = context
 		.data()
 		.startup_time

@@ -2,10 +2,11 @@ mod commands;
 
 use poise::{serenity_prelude::GatewayIntents, Framework, FrameworkOptions};
 use serde::Deserialize;
-use std::{fs::File, io, io::Read, time::SystemTime};
+use std::{fs::File, io, io::Read, result, time::SystemTime};
 use thiserror::Error;
 
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
+pub type Result<T> = result::Result<T, Error>;
 pub type Context<'a> = poise::Context<'a, Data, Error>;
 
 pub struct Data {
@@ -18,7 +19,7 @@ struct Config {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), InitializationError> {
+async fn main() -> result::Result<(), InitializationError> {
 	let config: Config = {
 		let mut file = File::open("autochroma.conf")?;
 		let size = file.metadata()?.len();
