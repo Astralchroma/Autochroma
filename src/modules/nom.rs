@@ -53,7 +53,7 @@ impl Nom {
 				.decode()?
 				.into_rgba8();
 
-			let image = resize(&image, 64, 64, FilterType::Nearest);
+			let image = resize(&image, 64, 64, FilterType::Lanczos3);
 
 			let mut working_image = RgbaImage::new(128, 128);
 			overlay(&mut working_image, &image, 32, 32);
