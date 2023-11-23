@@ -1,6 +1,6 @@
-pub mod test;
+pub mod nom;
 
-use crate::{modules::test::Test, Context, Data, Error, Result};
+use crate::{modules::nom::Nom, Context, Data, Error, Result};
 use log::warn;
 use poise::{builtins::register_in_guild, command, serenity_prelude::GuildId, ChoiceParameter, Command};
 use sqlx::{query, sqlite::SqliteQueryResult};
@@ -8,7 +8,7 @@ use sqlx::{query, sqlite::SqliteQueryResult};
 #[derive(Debug, ChoiceParameter)]
 #[allow(non_camel_case_types)] // I can't be bothered to spam #[name = ?]
 pub enum Modules {
-	test,
+	nom,
 }
 
 pub trait Module {
@@ -42,7 +42,7 @@ pub async fn get_guild_commands(data: &Data, guild: &GuildId) -> Result<Vec<Comm
 		}
 
 		match &*module.module {
-			"test" => Test::append_commands(&mut commands),
+			"nom" => Nom::append_commands(&mut commands),
 			_ => {
 				warn!("Invalid module `{}` for {guild}! Removing.", module.module);
 				delete_module_by_id(data, module.id).await?;

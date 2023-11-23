@@ -1,7 +1,7 @@
 mod commands;
 mod modules;
 
-use crate::{commands::server_info, commands::uptime, modules::module, modules::test::Test, modules::Module};
+use crate::{commands::server_info, commands::uptime, modules::module, modules::nom::Nom, modules::Module};
 use log::info;
 use poise::serenity_prelude::{self, GatewayIntents};
 use poise::{builtins::register_globally, builtins::register_in_guild, Command, Framework, FrameworkOptions};
@@ -44,7 +44,7 @@ async fn main() -> Result<(), InitializationError> {
 	migrate!().run(&database).await?;
 
 	let mut commands = get_global_commands();
-	Test::append_commands(&mut commands);
+	Nom::append_commands(&mut commands);
 
 	Ok(Framework::builder()
 		.options(FrameworkOptions {
@@ -88,3 +88,7 @@ pub enum InitializationError {
 	Migration(#[from] MigrateError),
 	Discord(#[from] serenity_prelude::Error),
 }
+
+#[derive(Debug, Error)]
+#[error("{0}")]
+pub struct GenericError(&'static str);
