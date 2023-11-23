@@ -1,0 +1,13 @@
+CREATE TABLE modules (
+	id     INTEGER
+		PRIMARY KEY
+		AUTOINCREMENT
+		NOT NULL
+		UNIQUE,
+	guild  UNSIGNED BIGINT
+		NOT NULL,
+	module TEXT
+		NOT NULL,
+
+	UNIQUE(guild, module) ON CONFLICT IGNORE
+);

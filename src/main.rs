@@ -1,25 +1,37 @@
 mod commands;
+mod modules;
 
-use poise::{builtins::register_globally, serenity_prelude::GatewayIntents, Framework, FrameworkOptions};
+use crate::{commands::server_info, commands::uptime, modules::module, modules::test::Test, modules::Module};
+use log::info;
+use poise::serenity_prelude::{self, GatewayIntents};
+use poise::{builtins::register_globally, builtins::register_in_guild, Command, Framework, FrameworkOptions};
 use serde::Deserialize;
+use sqlx::{migrate, migrate::MigrateError, SqlitePool};
 use std::{fs::File, io, io::Read, time::SystemTime};
 use thiserror::Error;
+
+pub fn get_global_commands() -> Vec<Command<Data, Error>> {
+	vec![module(), server_info(), uptime()]
+}
 
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 pub type Context<'a> = poise::Context<'a, Data, Error>;
-
-pub struct Data {
-	startup_time: SystemTime,
-}
 
 #[derive(Deserialize)]
 struct Config {
 	token: Box<str>,
 }
 
+pub struct Data {
+	startup_time: SystemTime,
+	database: SqlitePool,
+}
+
 #[tokio::main]
 async fn main() -> Result<(), InitializationError> {
+	env_logger::init();
+
 	let config: Config = {
 		let mut file = File::open("autochroma.conf")?;
 		let size = file.metadata()?.len();
@@ -28,24 +40,43 @@ async fn main() -> Result<(), InitializationError> {
 		hocon::de::from_str(&string)?
 	};
 
-	let framework = Framework::builder()
+	let database = SqlitePool::connect("sqlite:autochroma.db?mode=rwc").await?;
+	migrate!().run(&database).await?;
+
+	let mut commands = get_global_commands();
+	Test::append_commands(&mut commands);
+
+	Ok(Framework::builder()
 		.options(FrameworkOptions {
-			commands: vec![commands::uptime()],
+			commands,
 			..Default::default()
 		})
 		.token(config.token)
-		.intents(GatewayIntents::empty())
-		.setup(|context, _ready, framework| {
+		.intents(GatewayIntents::GUILDS)
+		.setup(|context, ready, _framework| {
 			Box::pin(async move {
-				register_globally(context, &framework.options().commands).await?;
+				register_globally(context, &get_global_commands()).await?;
 
-				Ok(Data {
+				let data = Data {
 					startup_time: SystemTime::now(),
-				})
-			})
-		});
+					database,
+				};
 
-	Ok(framework.run().await?)
+				for guild in &ready.guilds {
+					let commands = modules::get_guild_commands(&data, &guild.id).await?;
+					if commands.is_empty() {
+						continue;
+					}
+					register_in_guild(context, &commands, guild.id).await?;
+				}
+
+				info!("Ready!");
+
+				Ok(data)
+			})
+		})
+		.run()
+		.await?)
 }
 
 #[derive(Debug, Error)]
@@ -53,5 +84,7 @@ async fn main() -> Result<(), InitializationError> {
 pub enum InitializationError {
 	Io(#[from] io::Error),
 	Parse(#[from] hocon::Error),
-	Discord(#[from] poise::serenity_prelude::Error),
+	Database(#[from] sqlx::Error),
+	Migration(#[from] MigrateError),
+	Discord(#[from] serenity_prelude::Error),
 }
