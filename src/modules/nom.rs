@@ -1,14 +1,10 @@
-use crate::modules::Module;
-use crate::{Context, Data, Error};
-use crate::{GenericError, Result};
+use crate::{modules::Module, Context, Data, Error, GenericError, Result};
 use image::imageops::{overlay, resize, FilterType};
-use image::io::Reader;
-use image::{DynamicImage, ImageOutputFormat, Rgba, RgbaImage};
+use image::{io::Reader, DynamicImage, ImageOutputFormat, Rgba, RgbaImage};
 use imageproc::geometric_transformations::{rotate_about_center, Interpolation};
 use log::error;
 use once_cell::sync::Lazy;
-use poise::serenity_prelude::{Attachment, AttachmentType};
-use poise::{command, Command};
+use poise::{command, serenity_prelude::Attachment, serenity_prelude::AttachmentType, Command};
 use std::io::Cursor;
 
 // We don't actually know who owns the blobfox emojis, so we can't include the source image in the project.
