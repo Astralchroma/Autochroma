@@ -1,6 +1,7 @@
 /.idea
 /target
 
+/.sql-check.db
 /Cargo.lock
 /autochroma.conf
 /autochroma.db
