@@ -1,9 +1,7 @@
+/.direnv
 /.idea
-/target
 
-/.sqlx-check.db
-/Cargo.lock
+/.devenv*
 /autochroma.conf
-/autochroma.db
-/blobfoxcute.png
-/blobfoxcute_snout.png
+/devenv.local.nix
+/target

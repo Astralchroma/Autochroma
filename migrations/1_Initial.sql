@@ -1,13 +1,8 @@
-CREATE TABLE modules (
-	id     INTEGER
-		PRIMARY KEY
-		AUTOINCREMENT
-		NOT NULL
-		UNIQUE,
-	guild  UNSIGNED BIGINT
-		NOT NULL,
-	module TEXT
-		NOT NULL,
+CREATE TYPE MODULE AS ENUM ('nom');
 
-	UNIQUE(guild, module) ON CONFLICT IGNORE
+CREATE TABLE modules (
+	guild  BIGINT PRIMARY KEY, 
+	module MODULE NOT NULL,
+
+	UNIQUE(guild, module)
 );
