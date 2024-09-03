@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM modules WHERE guild = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "07db2fe7b958b09a4e8ccdc0a41c6acae881fe758a9bfb223d88615afbe1e49a"
+}

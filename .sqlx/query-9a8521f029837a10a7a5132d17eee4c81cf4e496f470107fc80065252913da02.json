@@ -1,0 +1,31 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT module as \"module: _\" FROM modules WHERE guild = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "module: _",
+        "type_info": {
+          "Custom": {
+            "name": "module",
+            "kind": {
+              "Enum": [
+                "nom"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "9a8521f029837a10a7a5132d17eee4c81cf4e496f470107fc80065252913da02"
+}
