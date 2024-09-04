@@ -3,7 +3,7 @@ mod id;
 mod modules;
 
 use crate::{commands::server_info, commands::uptime, modules::module};
-use clap::Parser;
+use clap::{Args, Parser};
 use log::info;
 use poise::builtins::{register_globally, register_in_guild};
 use poise::{serenity_prelude as serenity, Command, Framework, FrameworkOptions};
@@ -26,12 +26,37 @@ pub struct Data {
 }
 
 #[derive(Parser)]
+#[command(version)]
 pub struct Arguments {
-	#[arg(short, long)]
-	token_file: PathBuf,
+	#[command(flatten)]
+	discord_token: DiscordToken,
 
-	#[arg(short, long)]
-	connection_uri: String,
+	#[command(flatten)]
+	database_uri: DatabaseUri,
+}
+
+#[derive(Args)]
+#[group(required = true, multiple = false)]
+pub struct DiscordToken {
+	/// Specifies a File to load the Discord Token from
+	#[arg(long, alias = "token-file")]
+	discord_token_file: Option<PathBuf>,
+
+	/// Specifies a Discord Token
+	#[arg(long)]
+	discord_token: Option<String>,
+}
+
+#[derive(Args)]
+#[group(required = true, multiple = false)]
+pub struct DatabaseUri {
+	/// Specifies a File to load the Database URI from
+	#[arg(long)]
+	database_uri_file: Option<PathBuf>,
+
+	/// Specifies a Database URI
+	#[arg(long, alias = "connection-uri")]
+	database_uri: Option<String>,
 }
 
 #[tokio::main]
@@ -40,9 +65,23 @@ async fn main() -> Result<(), InitializationError> {
 
 	env_logger::init();
 
-	let token = fs::read_to_string(arguments.token_file)?;
+	let discord_token = arguments.discord_token.discord_token_file.map_or(
+		arguments
+			.discord_token
+			.discord_token
+			.ok_or(InitializationError::MissingDiscordToken),
+		|path| Ok(fs::read_to_string(path)?),
+	)?;
 
-	let database = PgPool::connect(&arguments.connection_uri).await?;
+	let database_uri = arguments.database_uri.database_uri_file.map_or(
+		arguments
+			.database_uri
+			.database_uri
+			.ok_or(InitializationError::MissingDatabaseUri),
+		|path| Ok(fs::read_to_string(path)?),
+	)?;
+
+	let database = PgPool::connect(&database_uri).await?;
 	migrate!().run(&database).await?;
 
 	let commands = get_global_commands();
@@ -77,7 +116,7 @@ async fn main() -> Result<(), InitializationError> {
 		})
 		.build();
 
-	ClientBuilder::new(token, GatewayIntents::GUILDS)
+	ClientBuilder::new(discord_token, GatewayIntents::GUILDS)
 		.framework(framework)
 		.await?
 		.start()
@@ -89,6 +128,10 @@ async fn main() -> Result<(), InitializationError> {
 #[derive(Debug, Error)]
 #[error(transparent)]
 pub enum InitializationError {
+	#[error("discord_token_file or discord_token should be set")]
+	MissingDiscordToken,
+	#[error("database_uri_file or database_uri should be set")]
+	MissingDatabaseUri,
 	Io(#[from] io::Error),
 	Database(#[from] sqlx::Error),
 	Migration(#[from] MigrateError),
