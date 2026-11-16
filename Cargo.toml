@@ -10,7 +10,7 @@ edition = "2021"
 
 env_logger = "0.11"
 log = "0.4"
-poise = "0.6"
+poise = "0.7"
 thiserror = "1"
 
 clap = { version = "4", features = ["derive"] }
